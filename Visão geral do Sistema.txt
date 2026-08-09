@@ -1,0 +1,56 @@
+Visão geral do projeto
+
+Nome: StockFlow API
+Tipo: API REST para gestão de estoque
+Linguagem: Python
+Framework: FastAPI
+Banco: PostgreSQL
+ORM: SQLAlchemy
+Validação: Pydantic
+Migrações: Alembic
+Testes: Pytest
+Containerização: Docker
+Documentação: OpenAPI / Swagger
+
+Objetivo
+
+Construir uma API REST capaz de controlar produtos, categorias, estoque e movimentações, permitindo posteriormente integrar:
+
+sistemas web;
+aplicativos;
+Power BI;
+dashboards;
+sistemas ERP;
+aplicações de análise de dados;
+modelos de Machine Learning.
+🏗️ Nossa metodologia
+
+Vamos dividir o projeto em 10 grandes fases:
+
+FASE 01 — Engenharia de Software
+        ↓
+FASE 02 — Levantamento de Requisitos
+        ↓
+FASE 03 — Arquitetura da Aplicação
+        ↓
+FASE 04 — Modelagem do Banco de Dados
+        ↓
+FASE 05 — Estrutura do Projeto
+        ↓
+FASE 06 — Desenvolvimento FastAPI
+        ↓
+FASE 07 — Segurança e Autenticação
+        ↓
+FASE 08 — Testes Automatizados
+        ↓
+FASE 09 — Docker e Deploy
+        ↓
+FASE 10 — Documentação e Portfólio
+
+E dentro de cada fase iremos trabalhar ponto por ponto e linha por linha.
+
+FASE 01 — ENGENHARIA DE SOFTWARE
+
+Antes de escrever:
+
+from fastapi import FastAPI
