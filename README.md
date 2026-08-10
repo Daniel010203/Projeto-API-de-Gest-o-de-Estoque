@@ -1,2 +1,2 @@
-# Projeto API de Gestão de Estoque
+# Projeto API de Gestão de Estoque - em desenvolvimento.
 
