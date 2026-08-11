@@ -1,0 +1,1102 @@
+FASE 3 — MODELAGEM DO BANCO DE DADOS
+
+
+Perfeito. Vamos avançar **exatamente do ponto em que paramos**.
+
+# 🚀 StockFlow API
+
+# FASE 3 — MODELAGEM DO BANCO DE DADOS
+
+Nesta fase ainda vamos evitar sair escrevendo código da aplicação. Primeiro vamos projetar o banco corretamente, porque ele será a base para os Models SQLAlchemy, Services, Repositories e endpoints que construiremos depois.
+
+A sequência será:
+
+```text
+FASE 3 — BANCO DE DADOS
+│
+├── 3.1 Objetivo
+├── 3.2 Modelo Conceitual
+├── 3.3 Entidades
+├── 3.4 Atributos
+├── 3.5 Relacionamentos
+├── 3.6 Cardinalidades
+├── 3.7 Modelo Lógico
+├── 3.8 Modelo Físico
+├── 3.9 Chaves Primárias
+├── 3.10 Chaves Estrangeiras
+├── 3.11 Constraints
+├── 3.12 Índices
+├── 3.13 Integridade Referencial
+├── 3.14 Regras de Estoque
+├── 3.15 DER
+└── 3.16 Próximos passos
+```
+
+---
+
+# 3.1 Objetivo
+
+O objetivo desta fase é transformar a arquitetura conceitual do StockFlow em uma estrutura de banco de dados relacional consistente.
+
+Nosso banco deverá permitir:
+
+* armazenar categorias;
+* armazenar produtos;
+* controlar saldo de estoque;
+* registrar entradas;
+* registrar saídas;
+* manter histórico;
+* identificar estoque baixo;
+* preservar integridade dos relacionamentos;
+* permitir consultas eficientes.
+
+O banco escolhido é:
+
+> **PostgreSQL**
+
+---
+
+# 3.2 Modelo Conceitual
+
+Começamos sem pensar em SQL.
+
+Primeiro pensamos no negócio.
+
+O domínio é:
+
+```text
+                 GESTÃO DE ESTOQUE
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+    Categoria         Produto        Movimentação
+                         │
+                         ▼
+                       Estoque
+```
+
+Temos quatro entidades principais:
+
+```text
+CATEGORY
+PRODUCT
+STOCK
+STOCK_MOVEMENT
+```
+
+---
+
+# 3.3 Entidades
+
+## Entidade 1 — Category
+
+Representa uma categoria de produtos.
+
+Exemplos:
+
+```text
+Informática
+Escritório
+Eletrônicos
+Materiais de Limpeza
+Ferramentas
+```
+
+---
+
+## Entidade 2 — Product
+
+Representa um produto comercializado ou armazenado.
+
+Exemplos:
+
+```text
+Teclado
+Mouse
+Monitor
+Notebook
+Cadeira
+```
+
+---
+
+## Entidade 3 — Stock
+
+Representa o saldo atual de determinado produto.
+
+Exemplo:
+
+```text
+Produto: Teclado
+Quantidade: 150
+```
+
+---
+
+## Entidade 4 — StockMovement
+
+Representa uma alteração no estoque.
+
+Exemplos:
+
+```text
+Entrada +100
+Saída -20
+Entrada +50
+Saída -10
+```
+
+---
+
+# 3.4 Atributos
+
+Agora vamos definir os atributos.
+
+## CATEGORY
+
+```text
+Category
+────────────────
+id
+name
+description
+is_active
+created_at
+updated_at
+```
+
+### Significado
+
+| Campo       | Descrição           |
+| ----------- | ------------------- |
+| id          | Identificador único |
+| name        | Nome da categoria   |
+| description | Descrição           |
+| is_active   | Status              |
+| created_at  | Data de criação     |
+| updated_at  | Última atualização  |
+
+---
+
+# 3.5 PRODUCT
+
+```text
+Product
+────────────────────
+id
+category_id
+sku
+name
+description
+price
+minimum_stock
+is_active
+created_at
+updated_at
+```
+
+### Significado
+
+| Campo         | Descrição      |
+| ------------- | -------------- |
+| id            | Identificador  |
+| category_id   | Categoria      |
+| sku           | Código único   |
+| name          | Nome           |
+| description   | Descrição      |
+| price         | Preço          |
+| minimum_stock | Estoque mínimo |
+| is_active     | Status         |
+| created_at    | Criação        |
+| updated_at    | Atualização    |
+
+---
+
+# 3.6 STOCK
+
+```text
+Stock
+────────────────
+id
+product_id
+quantity
+updated_at
+```
+
+| Campo      | Descrição          |
+| ---------- | ------------------ |
+| id         | Identificador      |
+| product_id | Produto            |
+| quantity   | Saldo atual        |
+| updated_at | Última atualização |
+
+---
+
+# 3.7 STOCK_MOVEMENT
+
+```text
+StockMovement
+──────────────────────
+id
+product_id
+movement_type
+quantity
+reason
+created_at
+```
+
+| Campo         | Descrição              |
+| ------------- | ---------------------- |
+| id            | Identificador          |
+| product_id    | Produto                |
+| movement_type | IN ou OUT              |
+| quantity      | Quantidade movimentada |
+| reason        | Motivo                 |
+| created_at    | Data/hora              |
+
+---
+
+# 3.8 Relacionamentos
+
+Agora conectamos as entidades.
+
+## Category → Product
+
+Uma categoria pode possuir muitos produtos.
+
+```text
+CATEGORY
+    │
+    │ 1
+    │
+    │ N
+    ▼
+PRODUCT
+```
+
+Cardinalidade:
+
+```text
+1:N
+```
+
+---
+
+## Product → Stock
+
+Cada produto terá um único registro de saldo.
+
+```text
+PRODUCT
+    │
+    │ 1
+    │
+    │ 1
+    ▼
+STOCK
+```
+
+Cardinalidade:
+
+```text
+1:1
+```
+
+---
+
+## Product → StockMovement
+
+Um produto pode possuir muitas movimentações.
+
+```text
+PRODUCT
+    │
+    │ 1
+    │
+    │ N
+    ▼
+STOCK_MOVEMENT
+```
+
+Cardinalidade:
+
+```text
+1:N
+```
+
+---
+
+# 3.9 Modelo Conceitual Completo
+
+```text
+┌─────────────────────┐
+│      CATEGORY       │
+│                     │
+│ id                  │
+│ name                │
+│ description         │
+│ is_active           │
+└──────────┬──────────┘
+           │
+           │ 1:N
+           │
+           ▼
+┌─────────────────────┐
+│       PRODUCT       │
+│                     │
+│ id                  │
+│ category_id         │
+│ sku                 │
+│ name                │
+│ description         │
+│ price               │
+│ minimum_stock       │
+│ is_active           │
+└───────┬─────────────┘
+        │
+        │
+        ├───────────────┐
+        │               │
+        │ 1:1           │ 1:N
+        ▼               ▼
+┌─────────────┐   ┌───────────────────┐
+│    STOCK    │   │  STOCK_MOVEMENT   │
+│             │   │                   │
+│ id          │   │ id                │
+│ product_id  │   │ product_id        │
+│ quantity    │   │ movement_type     │
+│ updated_at  │   │ quantity          │
+└─────────────┘   │ reason            │
+                  │ created_at        │
+                  └───────────────────┘
+```
+
+---
+
+# 3.10 Modelo Lógico
+
+Agora podemos começar a pensar como banco relacional.
+
+## CATEGORY
+
+```text
+CATEGORY
+--------------------------------
+PK id
+   name
+   description
+   is_active
+   created_at
+   updated_at
+```
+
+## PRODUCT
+
+```text
+PRODUCT
+--------------------------------
+PK id
+FK category_id
+   sku
+   name
+   description
+   price
+   minimum_stock
+   is_active
+   created_at
+   updated_at
+```
+
+## STOCK
+
+```text
+STOCK
+--------------------------------
+PK id
+FK product_id
+   quantity
+   updated_at
+```
+
+## STOCK_MOVEMENT
+
+```text
+STOCK_MOVEMENT
+--------------------------------
+PK id
+FK product_id
+   movement_type
+   quantity
+   reason
+   created_at
+```
+
+---
+
+# 3.11 Chaves Primárias
+
+Todas as tabelas terão uma chave primária:
+
+```text
+categories.id
+products.id
+stocks.id
+stock_movements.id
+```
+
+Utilizaremos identificadores numéricos.
+
+Conceitualmente:
+
+```text
+BIGINT
+```
+
+Isso fornece uma faixa muito grande de identificadores e é adequado para uma aplicação que poderá crescer.
+
+---
+
+# 3.12 Chaves Estrangeiras
+
+Agora estabelecemos os vínculos.
+
+## Product
+
+```text
+products.category_id
+        ↓
+categories.id
+```
+
+---
+
+## Stock
+
+```text
+stocks.product_id
+        ↓
+products.id
+```
+
+---
+
+## StockMovement
+
+```text
+stock_movements.product_id
+        ↓
+products.id
+```
+
+Portanto:
+
+```text
+categories
+     ▲
+     │
+products
+     ▲
+     │
+ ┌───┴──────────────┐
+ │                  │
+stocks      stock_movements
+```
+
+---
+
+# 3.13 Constraints
+
+As constraints são extremamente importantes.
+
+Não queremos depender somente do Python para garantir a integridade.
+
+O próprio PostgreSQL também deverá proteger os dados.
+
+---
+
+## SKU
+
+O SKU deverá ser único:
+
+```text
+UNIQUE(products.sku)
+```
+
+Não podemos ter:
+
+```text
+TEC-001
+TEC-001
+```
+
+---
+
+## Nome da categoria
+
+Também podemos impedir categorias duplicadas:
+
+```text
+UNIQUE(categories.name)
+```
+
+---
+
+## Quantidade
+
+A quantidade de estoque não poderá ser negativa:
+
+```text
+quantity >= 0
+```
+
+---
+
+## Quantidade de movimentação
+
+Uma movimentação precisa possuir quantidade positiva:
+
+```text
+quantity > 0
+```
+
+---
+
+## Estoque mínimo
+
+Também:
+
+```text
+minimum_stock >= 0
+```
+
+---
+
+# 3.14 Tipo de movimentação
+
+Teremos inicialmente dois tipos:
+
+```text
+IN
+OUT
+```
+
+Não queremos permitir:
+
+```text
+SALE
+ENTRANCE
+XYZ
+TEST
+```
+
+Portanto, podemos utilizar uma restrição lógica.
+
+Conceitualmente:
+
+```text
+movement_type IN ('IN', 'OUT')
+```
+
+Posteriormente poderemos evoluir para um ENUM do PostgreSQL ou uma tabela específica de tipos de movimentação, caso o domínio cresça.
+
+---
+
+# 3.15 Integridade Referencial
+
+Precisamos pensar no que acontece quando um registro relacionado é alterado ou excluído.
+
+Por exemplo:
+
+```text
+Category
+   │
+   └── Product
+```
+
+Se uma categoria possui produtos, não queremos simplesmente apagar a categoria e deixar produtos órfãos.
+
+Portanto:
+
+```text
+Category
+     │
+     └── Product
+```
+
+deverá possuir integridade referencial.
+
+Para produtos com histórico:
+
+```text
+Product
+   │
+   ├── Stock
+   │
+   └── Movements
+```
+
+não devemos permitir uma exclusão física que destrua o histórico.
+
+Por isso adotaremos:
+
+> **Exclusão lógica para produtos.**
+
+Ou seja:
+
+```text
+is_active = false
+```
+
+em vez de:
+
+```sql
+DELETE FROM products;
+```
+
+---
+
+# 3.16 Índices
+
+Agora pensamos em performance.
+
+Algumas consultas serão muito frequentes.
+
+## Índice do SKU
+
+```text
+products.sku
+```
+
+Como o SKU será único, o PostgreSQL poderá utilizar o índice associado à restrição.
+
+---
+
+## Índice da categoria
+
+```text
+products.category_id
+```
+
+Isso ajudará consultas como:
+
+```text
+listar produtos de determinada categoria
+```
+
+---
+
+## Índice das movimentações
+
+Teremos interesse em consultar:
+
+```text
+stock_movements.product_id
+stock_movements.created_at
+stock_movements.movement_type
+```
+
+Isso será especialmente importante quando começarmos a trabalhar com relatórios e indicadores.
+
+---
+
+# 3.17 Modelo Físico Inicial
+
+Agora podemos especificar os tipos de dados.
+
+## categories
+
+```text
+id           BIGINT
+name         VARCHAR(100)
+description  VARCHAR(255)
+is_active    BOOLEAN
+created_at   TIMESTAMP
+updated_at   TIMESTAMP
+```
+
+---
+
+## products
+
+```text
+id              BIGINT
+category_id     BIGINT
+sku             VARCHAR(50)
+name            VARCHAR(150)
+description     VARCHAR(500)
+price           NUMERIC(12,2)
+minimum_stock   INTEGER
+is_active       BOOLEAN
+created_at      TIMESTAMP
+updated_at      TIMESTAMP
+```
+
+---
+
+## stocks
+
+```text
+id           BIGINT
+product_id   BIGINT
+quantity     INTEGER
+updated_at   TIMESTAMP
+```
+
+---
+
+## stock_movements
+
+```text
+id              BIGINT
+product_id      BIGINT
+movement_type   VARCHAR(10)
+quantity        INTEGER
+reason          VARCHAR(255)
+created_at      TIMESTAMP
+```
+
+---
+
+# 3.18 Uma decisão importante: dinheiro
+
+O preço do produto será:
+
+```text
+NUMERIC(12,2)
+```
+
+e **não**:
+
+```text
+FLOAT
+```
+
+Isso é importante.
+
+Valores financeiros não devem depender da representação binária aproximada típica de números de ponto flutuante.
+
+Exemplo:
+
+```text
+120.50
+```
+
+será armazenado como valor decimal apropriado.
+
+---
+
+# 3.19 Uma decisão importante: timestamps
+
+Teremos:
+
+```text
+created_at
+updated_at
+```
+
+Isso permitirá acompanhar o ciclo de vida dos registros.
+
+Exemplo:
+
+```text
+Produto criado
+      ↓
+created_at
+
+Produto alterado
+      ↓
+updated_at
+```
+
+Já uma movimentação possuirá principalmente:
+
+```text
+created_at
+```
+
+porque movimentações representam eventos históricos.
+
+---
+
+# 3.20 Regra fundamental do estoque
+
+Agora chegamos a uma das partes mais importantes do projeto.
+
+O estoque deverá obedecer:
+
+```text
+ESTOQUE ATUAL >= 0
+```
+
+Para uma entrada:
+
+```text
+estoque_novo =
+estoque_atual + quantidade
+```
+
+Exemplo:
+
+```text
+100 + 50 = 150
+```
+
+Para uma saída:
+
+```text
+estoque_novo =
+estoque_atual - quantidade
+```
+
+Exemplo:
+
+```text
+150 - 20 = 130
+```
+
+Mas:
+
+```text
+100 - 150
+```
+
+deverá ser rejeitado.
+
+Resultado:
+
+```text
+❌ Estoque insuficiente
+```
+
+---
+
+# 3.21 Histórico versus saldo
+
+Teremos duas fontes complementares de informação.
+
+### Saldo atual
+
+```text
+stocks.quantity
+```
+
+### Histórico
+
+```text
+stock_movements
+```
+
+Exemplo:
+
+```text
+Saldo inicial: 0
+
+Entrada +100
+Saldo = 100
+
+Saída -20
+Saldo = 80
+
+Entrada +50
+Saldo = 130
+
+Saída -30
+Saldo = 100
+```
+
+O histórico permanece:
+
+```text
++100
+-20
++50
+-30
+```
+
+Enquanto o saldo atual permanece:
+
+```text
+100
+```
+
+Isso será fundamental posteriormente para auditoria.
+
+---
+
+# 3.22 Transação de banco
+
+Uma entrada ou saída deverá ser tratada como uma operação consistente.
+
+Por exemplo:
+
+```text
+Registrar saída
+       │
+       ├── Criar movimentação
+       │
+       └── Atualizar estoque
+```
+
+As duas operações precisam funcionar juntas.
+
+Não podemos permitir:
+
+```text
+Movimentação criada
+       ↓
+❌ erro ao atualizar estoque
+```
+
+deixando o banco inconsistente.
+
+Portanto utilizaremos **transações do PostgreSQL/SQLAlchemy**.
+
+Conceitualmente:
+
+```text
+BEGIN
+   │
+   ├── INSERT movement
+   │
+   ├── UPDATE stock
+   │
+   └── COMMIT
+```
+
+Se ocorrer erro:
+
+```text
+ROLLBACK
+```
+
+---
+
+# 3.23 DER Final
+
+O nosso DER inicial fica:
+
+```text
+┌───────────────────────────┐
+│         CATEGORIES        │
+├───────────────────────────┤
+│ PK id                     │
+│    name                   │
+│    description            │
+│    is_active              │
+│    created_at             │
+│    updated_at             │
+└─────────────┬─────────────┘
+              │
+              │ 1
+              │
+              │ N
+              ▼
+┌───────────────────────────┐
+│          PRODUCTS         │
+├───────────────────────────┤
+│ PK id                     │
+│ FK category_id            │
+│    sku UNIQUE             │
+│    name                   │
+│    description            │
+│    price                  │
+│    minimum_stock          │
+│    is_active               │
+│    created_at             │
+│    updated_at             │
+└─────────────┬─────────────┘
+              │
+       ┌──────┴───────────┐
+       │                  │
+       │ 1                │ 1
+       │                  │
+       │ 1                │ N
+       ▼                  ▼
+┌───────────────┐  ┌────────────────────────┐
+│     STOCK     │  │    STOCK_MOVEMENTS     │
+├───────────────┤  ├────────────────────────┤
+│ PK id         │  │ PK id                  │
+│ FK product_id │  │ FK product_id          │
+│    quantity   │  │    movement_type       │
+│    updated_at │  │    quantity            │
+└───────────────┘  │    reason              │
+                   │    created_at          │
+                   └────────────────────────┘
+```
+
+---
+
+# 3.24 Resumo da modelagem
+
+Nossa base inicial terá:
+
+| Tabela            | Função      |
+| ----------------- | ----------- |
+| `categories`      | Categorias  |
+| `products`        | Produtos    |
+| `stocks`          | Saldo atual |
+| `stock_movements` | Histórico   |
+
+Relacionamentos:
+
+```text
+categories 1:N products
+products   1:1 stocks
+products   1:N stock_movements
+```
+
+Principais constraints:
+
+```text
+SKU UNIQUE
+category.name UNIQUE
+stock.quantity >= 0
+movement.quantity > 0
+minimum_stock >= 0
+movement_type IN ('IN', 'OUT')
+```
+
+---
+
+# 🎯 Próximo passo dentro da Fase 3
+
+Agora que temos o **modelo conceitual e lógico**, vamos avançar para a parte física.
+
+A próxima etapa será:
+
+## **3.25 — Construção do SQL DDL**
+
+Vamos escrever, **linha por linha**, o SQL responsável por criar:
+
+```text
+CREATE DATABASE
+CREATE TABLE categories
+CREATE TABLE products
+CREATE TABLE stocks
+CREATE TABLE stock_movements
+```
+
+Depois adicionaremos:
+
+```text
+PRIMARY KEY
+FOREIGN KEY
+UNIQUE
+CHECK
+INDEX
+```
+
+E vamos testar o modelo no PostgreSQL.
+
+**Somente depois disso** faremos a transformação desse modelo para:
+
+```text
+SQLAlchemy Models
+        ↓
+Alembic Migration
+        ↓
+FastAPI
+```
+
+Essa sequência é importante porque queremos que você aprenda **engenharia de software + modelagem de dados + Back-End**, e não apenas copie código de FastAPI.
