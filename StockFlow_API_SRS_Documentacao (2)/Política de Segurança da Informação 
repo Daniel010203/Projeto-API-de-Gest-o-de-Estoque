@@ -1,0 +1,660 @@
+SmartDoc Extractor
+
+Política de Segurança da Informação
+
+Documento: PSI-SDE-001
+Versão: 1.0
+Status: Em desenvolvimento
+Sistema: SmartDoc Extractor
+
+---
+
+1. Objetivo
+
+Esta Política de Segurança da Informação estabelece os princípios, diretrizes e controles necessários para proteger as informações processadas, armazenadas e transmitidas pelo SmartDoc Extractor.
+
+O objetivo é garantir:
+
+- Confidencialidade;
+- Integridade;
+- Disponibilidade;
+- Autenticidade;
+- Rastreabilidade;
+- Responsabilização sobre as operações realizadas no sistema.
+
+A política deverá orientar as decisões de arquitetura, desenvolvimento, banco de dados, APIs, armazenamento de documentos, processamento OCR/IA, auditoria e operação do sistema.
+
+---
+
+2. Escopo
+
+Esta política aplica-se a todos os componentes do SmartDoc Extractor, incluindo:
+
+- Interface Web;
+- Backend Python;
+- APIs REST;
+- Banco de dados PostgreSQL;
+- Sistema de armazenamento de documentos;
+- Document Processing Engine;
+- Processadores PDF, XML, Excel, Word e imagens;
+- OCR;
+- Motor de regras;
+- Validation Engine;
+- Export Engine;
+- Logs;
+- Auditoria;
+- Integrações externas;
+- Usuários e perfis de acesso;
+- Ambientes de desenvolvimento, testes e produção.
+
+---
+
+3. Princípios de Segurança
+
+O SmartDoc Extractor deverá adotar os seguintes princípios.
+
+3.1 Princípio do Menor Privilégio
+
+Cada usuário, serviço ou componente deverá possuir somente as permissões necessárias para executar suas atividades.
+
+Exemplo:
+
+Um usuário responsável por processar documentos não deverá possuir automaticamente permissão administrativa sobre usuários do sistema.
+
+---
+
+3.2 Defesa em Profundidade
+
+A segurança não deverá depender de um único mecanismo.
+
+O sistema deverá utilizar múltiplas camadas de proteção:
+
+Usuário
+   ↓
+Autenticação
+   ↓
+Autorização
+   ↓
+API
+   ↓
+Serviços
+   ↓
+Banco de Dados
+   ↓
+Armazenamento
+
+---
+
+3.3 Segurança desde o Projeto
+
+Os requisitos de segurança deverão ser considerados desde a engenharia do software e não somente após a implementação.
+
+Decisões relacionadas a:
+
+- Banco de dados;
+- APIs;
+- armazenamento;
+- autenticação;
+- autorização;
+- logs;
+- processamento de documentos;
+
+deverão considerar segurança desde sua definição.
+
+---
+
+3.4 Separação de Responsabilidades
+
+Funções críticas deverão ser distribuídas entre diferentes perfis e componentes sempre que necessário.
+
+Exemplo:
+
+Operador
+   ↓
+Processa documento
+
+Analista
+   ↓
+Valida informação
+
+Auditor
+   ↓
+Consulta histórico
+
+Administrador
+   ↓
+Gerencia usuários e configurações
+
+---
+
+3.5 Rastreabilidade
+
+Operações relevantes deverão possuir registro de auditoria.
+
+O sistema deverá permitir identificar, quando aplicável:
+
+- Quem realizou a operação;
+- Qual operação foi realizada;
+- Qual documento foi afetado;
+- Data e hora;
+- Resultado da operação;
+- Alterações realizadas.
+
+Essa diretriz está alinhada à entidade "Auditoria" prevista no modelo conceitual do sistema.
+
+---
+
+4. Classificação das Informações
+
+As informações processadas pelo SmartDoc Extractor deverão ser classificadas de acordo com seu nível de sensibilidade.
+
+4.1 Pública
+
+Informações que podem ser disponibilizadas sem impacto significativo para a organização.
+
+Exemplos:
+
+- Documentação pública do projeto;
+- Informações institucionais;
+- Documentação técnica não sensível.
+
+---
+
+4.2 Interna
+
+Informações destinadas exclusivamente aos usuários autorizados da organização.
+
+Exemplos:
+
+- Configurações internas;
+- Relatórios operacionais;
+- Indicadores internos;
+- Logs administrativos.
+
+---
+
+4.3 Confidencial
+
+Informações cujo acesso indevido poderá causar impacto operacional, financeiro ou reputacional.
+
+Exemplos:
+
+- Documentos empresariais;
+- Contratos;
+- Informações financeiras;
+- Dados extraídos de documentos internos.
+
+---
+
+4.4 Restrita
+
+Informações que exigem controles de acesso mais rigorosos.
+
+Exemplos:
+
+- Credenciais;
+- Tokens;
+- Chaves criptográficas;
+- Informações pessoais;
+- Dados protegidos por requisitos legais ou contratuais.
+
+---
+
+5. Controle de Acesso
+
+O SmartDoc Extractor deverá utilizar controle de acesso baseado em funções (RBAC — Role-Based Access Control).
+
+Os perfis inicialmente previstos são:
+
+Perfil| Responsabilidade
+Administrador| Administração geral
+Supervisor| Supervisão das operações
+Analista| Análise e validação
+Operador| Processamento de documentos
+Auditor| Consulta e auditoria
+Consulta| Somente visualização autorizada
+
+A definição conceitual de usuários e perfis já faz parte do modelo de dados do projeto.
+
+---
+
+6. Autenticação
+
+O acesso ao sistema deverá exigir autenticação.
+
+Requisitos mínimos:
+
+- Senhas armazenadas somente em formato protegido;
+- Nunca armazenar senhas em texto puro;
+- Controle de sessão;
+- Expiração de sessão;
+- Proteção contra tentativas excessivas de autenticação;
+- Logout;
+- Registro de eventos relevantes de autenticação.
+
+A arquitetura do sistema já prevê um módulo específico de autenticação ("auth").
+
+---
+
+7. Proteção de Credenciais
+
+Credenciais e segredos da aplicação não deverão ser armazenados diretamente no código-fonte.
+
+Não deverá ocorrer:
+
+senha = "MinhaSenha123"
+
+ou:
+
+DATABASE_PASSWORD = "senha-do-banco"
+
+As configurações sensíveis deverão ser fornecidas por mecanismos apropriados de configuração e gerenciamento de segredos.
+
+Também deverão ser evitados:
+
+- Commit de senhas no Git;
+- Tokens em código;
+- Chaves de API em arquivos públicos;
+- Credenciais dentro de imagens Docker;
+- Compartilhamento de credenciais entre ambientes.
+
+---
+
+8. Segurança dos Documentos
+
+Os documentos enviados ao sistema deverão ser tratados como informações potencialmente confidenciais.
+
+O sistema deverá implementar controles para:
+
+- Validar extensão;
+- Validar MIME type;
+- Controlar tamanho máximo;
+- Gerar identificador único;
+- Registrar checksum/hash;
+- Controlar permissões de acesso;
+- Evitar acesso direto não autorizado;
+- Registrar operações relevantes;
+- Controlar ciclo de vida do documento.
+
+O modelo conceitual já prevê "hash_sha256", tamanho, extensão, tipo e informações de upload na entidade Documento.
+
+---
+
+9. Integridade dos Documentos
+
+O SmartDoc Extractor deverá utilizar mecanismos para verificar se um documento sofreu alteração indevida.
+
+Quando aplicável, deverá ser calculado um hash criptográfico do arquivo.
+
+Exemplo conceitual:
+
+Arquivo
+   ↓
+SHA-256
+   ↓
+Hash
+   ↓
+Banco de Dados
+
+Durante uma verificação posterior:
+
+Arquivo atual
+      ↓
+SHA-256
+      ↓
+Comparação
+      ↓
+Hash armazenado
+
+Uma divergência deverá ser tratada como evento de integridade que poderá exigir investigação.
+
+---
+
+10. Segurança do Banco de Dados
+
+O PostgreSQL deverá ser configurado seguindo o princípio do menor privilégio.
+
+A aplicação não deverá utilizar uma conta de banco com privilégios administrativos desnecessários.
+
+Deverão ser considerados:
+
+- Usuário específico da aplicação;
+- Senha protegida;
+- Controle de acesso;
+- Separação entre ambientes;
+- Restrição de conexões;
+- Proteção das credenciais;
+- Backup;
+- Monitoramento;
+- Auditoria quando necessária.
+
+A implementação física dessas medidas será detalhada posteriormente no documento de segurança do PostgreSQL.
+
+---
+
+11. Segurança da API
+
+Todas as APIs deverão implementar mecanismos adequados de:
+
+- Autenticação;
+- Autorização;
+- Validação de entrada;
+- Controle de acesso aos recursos;
+- Tratamento seguro de erros;
+- Controle de tamanho das requisições;
+- Proteção contra abuso;
+- Registro de eventos relevantes.
+
+As APIs serão organizadas sob "/api/v1", conforme definido na arquitetura da solução.
+
+---
+
+12. Segurança no Processamento de Documentos
+
+Como o SmartDoc possui um Document Processing Engine, documentos enviados ao sistema deverão ser considerados como entrada não confiável.
+
+O processamento deverá realizar validações antes da execução.
+
+Fluxo conceitual:
+
+Upload
+   ↓
+Validação
+   ↓
+Identificação do formato
+   ↓
+Verificação de segurança
+   ↓
+Processamento
+   ↓
+Extração
+   ↓
+Validação
+   ↓
+Persistência
+
+Nenhum documento deverá ser processado simplesmente porque possui uma extensão permitida.
+
+---
+
+13. Segurança do OCR e Inteligência Artificial
+
+Documentos encaminhados para OCR ou mecanismos de IA deverão seguir os mesmos controles de proteção aplicados aos demais documentos.
+
+Deverão ser considerados:
+
+- Controle de acesso;
+- Minimização de dados;
+- Registro do processamento;
+- Proteção das informações extraídas;
+- Controle sobre serviços externos;
+- Não exposição indevida de documentos;
+- Gestão de credenciais de APIs externas.
+
+A arquitetura prevê OCR e IA como componentes independentes do processamento documental.
+
+---
+
+14. Logs e Auditoria
+
+O sistema deverá manter mecanismos separados para:
+
+Logs técnicos
+
+Utilizados para diagnóstico e operação.
+
+Exemplos:
+
+- Erros;
+- Exceções;
+- Falhas de processamento;
+- Tempo de processamento;
+- Falhas de integração.
+
+Auditoria
+
+Utilizada para rastrear ações relevantes dos usuários e processos.
+
+Exemplos:
+
+- Login;
+- Logout;
+- Upload;
+- Exclusão;
+- Alteração;
+- Validação;
+- Exportação;
+- Alteração de permissões.
+
+O modelo conceitual prevê entidades específicas para "Log" e "Auditoria".
+
+---
+
+15. Proteção contra Exposição de Dados
+
+Mensagens de erro não deverão revelar informações internas desnecessárias.
+
+Não deverá ser retornado ao usuário:
+
+- Stack trace;
+- Senha;
+- Token;
+- String de conexão;
+- Informações internas do servidor;
+- Estrutura desnecessária do banco.
+
+O sistema deverá apresentar mensagens adequadas ao usuário e registrar detalhes técnicos nos mecanismos apropriados de log.
+
+---
+
+16. Backup e Recuperação
+
+Deverá existir uma estratégia de backup para:
+
+- Banco PostgreSQL;
+- Metadados;
+- Documentos armazenados;
+- Configurações críticas;
+- Informações necessárias à recuperação do sistema.
+
+A estratégia deverá definir posteriormente:
+
+- Periodicidade;
+- Retenção;
+- Local de armazenamento;
+- Criptografia;
+- Testes de restauração;
+- Responsabilidades.
+
+---
+
+17. Gestão de Incidentes
+
+Eventos de segurança deverão possuir processo de tratamento.
+
+Fluxo conceitual:
+
+Detecção
+   ↓
+Registro
+   ↓
+Classificação
+   ↓
+Análise
+   ↓
+Contenção
+   ↓
+Correção
+   ↓
+Recuperação
+   ↓
+Lições aprendidas
+
+Exemplos de incidentes:
+
+- Acesso não autorizado;
+- Tentativas repetidas de autenticação;
+- Alteração indevida de documentos;
+- Vazamento de credenciais;
+- Falha de integridade;
+- Comportamento anormal de uma integração.
+
+---
+
+18. Desenvolvimento Seguro
+
+O desenvolvimento deverá seguir práticas de segurança durante todo o ciclo de vida.
+
+Deverão ser considerados:
+
+- Revisão de código;
+- Testes automatizados;
+- Testes de segurança;
+- Análise de dependências;
+- Controle de versões;
+- Proteção de segredos;
+- Separação entre ambientes;
+- Atualização de bibliotecas;
+- Tratamento seguro de entradas.
+
+---
+
+19. Ambientes
+
+Os ambientes deverão ser separados:
+
+Desenvolvimento
+       ↓
+Teste
+       ↓
+Homologação
+       ↓
+Produção
+
+Credenciais e configurações de produção não deverão ser utilizadas diretamente no ambiente de desenvolvimento.
+
+---
+
+20. Princípio de Privacy by Design
+
+O SmartDoc Extractor deverá considerar privacidade desde a concepção da solução.
+
+Sempre que possível, deverão ser aplicados:
+
+- Minimização de dados;
+- Limitação da finalidade;
+- Controle de acesso;
+- Retenção adequada;
+- Proteção dos dados;
+- Rastreabilidade;
+- Descarte seguro.
+
+Os requisitos específicos relacionados à LGPD serão detalhados em documento próprio.
+
+---
+
+21. Responsabilidades
+
+Administrador
+
+Responsável por:
+
+- Gerenciamento de usuários;
+- Perfis;
+- Permissões;
+- Configurações administrativas;
+- Acompanhamento de eventos de segurança.
+
+Operador
+
+Responsável por:
+
+- Processamento autorizado;
+- Utilização adequada do sistema;
+- Comunicação de incidentes.
+
+Analista
+
+Responsável por:
+
+- Validação das informações;
+- Tratamento das inconsistências;
+- Utilização adequada dos dados.
+
+Auditor
+
+Responsável por:
+
+- Consulta dos registros;
+- Análise de rastreabilidade;
+- Apoio às auditorias.
+
+Desenvolvedor
+
+Responsável por:
+
+- Implementação segura;
+- Correção de vulnerabilidades;
+- Proteção de credenciais;
+- Testes de segurança.
+
+---
+
+22. Diretriz de Segurança para o Projeto
+
+A segurança deverá acompanhar todas as fases do SmartDoc Extractor:
+
+Engenharia de Requisitos
+          ↓
+Segurança
+          ↓
+Modelagem de Dados
+          ↓
+PostgreSQL
+          ↓
+Backend
+          ↓
+API
+          ↓
+Processamento
+          ↓
+Testes
+          ↓
+Docker
+          ↓
+Deploy
+          ↓
+Monitoramento
+
+Portanto, segurança não será considerada uma funcionalidade adicional.
+
+Ela será um requisito transversal da solução.
+
+---
+
+23. Documentos Derivados
+
+A partir desta política serão desenvolvidos os seguintes documentos:
+
+1. Requisitos de Segurança da Informação;
+2. Modelo de Controle de Acesso;
+3. Política de Autenticação;
+4. Política de Proteção de Dados;
+5. Política de Logs e Auditoria;
+6. Política de Backup e Recuperação;
+7. Gestão de Incidentes;
+8. Análise de Riscos;
+9. Segurança do PostgreSQL;
+10. Segurança da API;
+11. Segurança do Processamento de Documentos;
+12. Segurança de OCR e IA;
+13. Checklist de Desenvolvimento Seguro.
+
+---
+
+24. Status
+
+Versão: 1.0
+Status: Documento base aprovado para evolução da documentação de segurança.
+
+A implementação técnica dos controles será definida nos documentos derivados e nas fases posteriores de arquitetura, banco de dados, desenvolvimento e infraestrutura.
